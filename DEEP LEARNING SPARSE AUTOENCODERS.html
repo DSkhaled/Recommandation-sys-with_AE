@@ -1,0 +1,403 @@
+<!doctype html>
+<html xmlns:og="http://opengraphprotocol.org/schema/" xmlns:fb="http://www.facebook.com/2008/fbml" xmlns:article="http://ogp.me/ns/article" lang="en-US" itemscope itemtype="http://schema.org/Article" >
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- This is Squarespace. --><!-- eric-wilkinson-do07 -->
+<base href="">
+<meta charset="utf-8" />
+<title>Deep Learning: Sparse Autoencoders &mdash; Eric Wilkinson</title>
+<link rel="shortcut icon" type="image/x-icon" href="https://static.squarespace.com/universal/default-favicon.ico"/>
+<link rel="canonical" href="http://www.ericlwilkinson.com/blog/2014/11/19/deep-learning-sparse-autoencoders"/>
+<meta property="og:site_name" content="Eric Wilkinson"/>
+<meta property="og:title" content="Deep Learning: Sparse Autoencoders"/>
+<meta property="og:latitude" content="40.7207559"/>
+<meta property="og:longitude" content="-74.00076130000002"/>
+<meta property="og:url" content="http://www.ericlwilkinson.com/blog/2014/11/19/deep-learning-sparse-autoencoders"/>
+<meta property="og:type" content="article"/>
+<meta property="og:description" content="Short introduction on single layer sparse autoencoders and change of representation. Part of a deep learning series investigating recent advancements in the field that have made training deep networks tractible."/>
+<meta property="og:image" content="http://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/53c4755fe4b00a113d5ba379/546d5bf7e4b0d7784fd18052/1417831948925/?format=1500w"/>
+<meta property="og:image:width" content="1500"/>
+<meta property="og:image:height" content="1427"/>
+<meta itemprop="name" content="Deep Learning: Sparse Autoencoders"/>
+<meta itemprop="url" content="http://www.ericlwilkinson.com/blog/2014/11/19/deep-learning-sparse-autoencoders"/>
+<meta itemprop="description" content="Short introduction on single layer sparse autoencoders and change of representation. Part of a deep learning series investigating recent advancements in the field that have made training deep networks tractible."/>
+<meta itemprop="thumbnailUrl" content="http://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/53c4755fe4b00a113d5ba379/546d5bf7e4b0d7784fd18052/1417831948925/?format=1500w"/>
+<link rel="image_src" href="http://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/53c4755fe4b00a113d5ba379/546d5bf7e4b0d7784fd18052/1417831948925/?format=1500w" />
+<meta itemprop="image" content="http://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/53c4755fe4b00a113d5ba379/546d5bf7e4b0d7784fd18052/1417831948925/?format=1500w"/>
+<meta itemprop="author" content="Eric Wilkinson"/>
+<meta itemprop="datePublished" content="2014-11-26T14:19:43-0500"/>
+<meta itemprop="headline" content="Deep Learning: Sparse Autoencoders"/>
+<meta itemprop="publisher" content="Eric Wilkinson"/>
+<meta name="twitter:title" content="Deep Learning: Sparse Autoencoders"/>
+<meta name="twitter:image" content="http://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/53c4755fe4b00a113d5ba379/546d5bf7e4b0d7784fd18052/1417831948925/?format=1500w"/>
+<meta name="twitter:url" content="http://www.ericlwilkinson.com/blog/2014/11/19/deep-learning-sparse-autoencoders"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:description" content="Short introduction on single layer sparse autoencoders and change of representation. Part of a deep learning series investigating recent advancements in the field that have made training deep networks tractible."/>
+<meta name="description" content="Short introduction on single layer sparse autoencoders and change of 
+representation. Part of a deep learning series investigating recent 
+advancements in the field that have made training deep networks tractible." />
+<script type="text/javascript" src="//use.typekit.net/ik/-8hKXeL4717q5_xBTPZ7qHz2PJ5SBx-xN4ij_mGzkXIfez9gfFHN4UJLFRbh52jhWD9DjDbhZR6kZQsKw2qajDMajDBR52MtwgTDiaiaOcmk-AFCih8C-h80ShN0OcFzdPU8Sc8RdYiTdelTd1FzdKoRdhXCZW4Tjkua-AUn-AoDdhtlZev3FkoDSWmyScmDSeBRZPoRdhXCHKo8Sc8ROWiTdelTd1FzdKuqdDMaO1FUiABkZWF3jAF8OcFzdPJwSY4zpe8ljPu0daZyH6qJtKGbMg62JMJ7fbKzMsMMeMb6MKG4fHXgIMMjgKMfH6qJK3IbMg6YJMJ7fbRRHyMMeMX6MKG4fHtgIMMjIfMfH6qJRMIbMg6sJMJ.js"></script>
+<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Varela+Round:400,normal,normalitalic,700normal,700italic,400italic"/>
+<script type="text/javascript">SQUARESPACE_ROLLUPS = {};</script>
+<script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//static.squarespace.com/universal/scripts-compressed/common-adcd124bdca566e569b2-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-common');</script>
+<script crossorigin="anonymous" src="//static.squarespace.com/universal/scripts-compressed/common-adcd124bdca566e569b2-min.en-US.js" ></script><script crossorigin="anonymous" src="//static.squarespace.com/universal/scripts-compressed/performance-7f859800d12d9bd58651-min.en-US.js" defer ></script><script data-name="static-context">Static = window.Static || {}; Static.SQUARESPACE_CONTEXT = {"facebookAppId":"314192535267336","rollups":{"squarespace-announcement-bar":{"css":"//static.squarespace.com/universal/styles-compressed/announcement-bar-d41d8cd98f00b204e9800998ecf8427e-min.css","js":"//static.squarespace.com/universal/scripts-compressed/announcement-bar-1bd6891f4116dd802d3e-min.en-US.js"},"squarespace-audio-player":{"css":"//static.squarespace.com/universal/styles-compressed/audio-player-a57b8f3aa31918104f57a068648fbc63-min.css","js":"//static.squarespace.com/universal/scripts-compressed/audio-player-88f491964ed51c529d3f-min.en-US.js"},"squarespace-blog-collection-list":{"css":"//static.squarespace.com/universal/styles-compressed/blog-collection-list-d41d8cd98f00b204e9800998ecf8427e-min.css","js":"//static.squarespace.com/universal/scripts-compressed/blog-collection-list-dae61b6efffd234d480e-min.en-US.js"},"squarespace-calendar-block-renderer":{"css":"//static.squarespace.com/universal/styles-compressed/calendar-block-renderer-9acef2d24c6a994fca1a8a82e99e19c3-min.css","js":"//static.squarespace.com/universal/scripts-compressed/calendar-block-renderer-377c047662c3b9c59f77-min.en-US.js"},"squarespace-chartjs-helpers":{"css":"//static.squarespace.com/universal/styles-compressed/chartjs-helpers-9935a41d63cf08ca108505d288c1712e-min.css","js":"//static.squarespace.com/universal/scripts-compressed/chartjs-helpers-86c153140b7fc5344236-min.en-US.js"},"squarespace-comments":{"css":"//static.squarespace.com/universal/styles-compressed/comments-a7b26c9ae88684f76d210b61d0b0d848-min.css","js":"//static.squarespace.com/universal/scripts-compressed/comments-ca038cea0a6a0e236c3c-min.en-US.js"},"squarespace-commerce-cart":{"js":"//static.squarespace.com/universal/scripts-compressed/commerce-cart-4e9dc6c21b9ac3e3d3cf-min.en-US.js"},"squarespace-dialog":{"css":"//static.squarespace.com/universal/styles-compressed/dialog-7d0827ef14cce0b773fcd1eee28fbdee-min.css","js":"//static.squarespace.com/universal/scripts-compressed/dialog-cf16bceccc0e81310bde-min.en-US.js"},"squarespace-events-collection":{"css":"//static.squarespace.com/universal/styles-compressed/events-collection-9acef2d24c6a994fca1a8a82e99e19c3-min.css","js":"//static.squarespace.com/universal/scripts-compressed/events-collection-f9c3cd765f3b338e1f56-min.en-US.js"},"squarespace-form-rendering-utils":{"js":"//static.squarespace.com/universal/scripts-compressed/form-rendering-utils-269f204ef662945d367d-min.en-US.js"},"squarespace-forms":{"css":"//static.squarespace.com/universal/styles-compressed/forms-ac7917c174031c937e3df4b3a2005b34-min.css","js":"//static.squarespace.com/universal/scripts-compressed/forms-29db0caa341fe9b27ea0-min.en-US.js"},"squarespace-gallery-collection-list":{"css":"//static.squarespace.com/universal/styles-compressed/gallery-collection-list-d41d8cd98f00b204e9800998ecf8427e-min.css","js":"//static.squarespace.com/universal/scripts-compressed/gallery-collection-list-7648566bab72920ef13d-min.en-US.js"},"squarespace-image-zoom":{"css":"//static.squarespace.com/universal/styles-compressed/image-zoom-72b0ab7796582588032aa6472e2e2f14-min.css","js":"//static.squarespace.com/universal/scripts-compressed/image-zoom-cb5275e89163cb85e96e-min.en-US.js"},"squarespace-pinterest":{"css":"//static.squarespace.com/universal/styles-compressed/pinterest-d41d8cd98f00b204e9800998ecf8427e-min.css","js":"//static.squarespace.com/universal/scripts-compressed/pinterest-0f96759741e00f75abdf-min.en-US.js"},"squarespace-popup-overlay":{"css":"//static.squarespace.com/universal/styles-compressed/popup-overlay-7b48efeab9b323dfdb524a256cf61595-min.css","js":"//static.squarespace.com/universal/scripts-compressed/popup-overlay-dd181eeab0bdf7a58057-min.en-US.js"},"squarespace-product-quick-view":{"css":"//static.squarespace.com/universal/styles-compressed/product-quick-view-bc8694b75a40e4bd969b662b80ebafb5-min.css","js":"//static.squarespace.com/universal/scripts-compressed/product-quick-view-5c750646a3ccbda39f8e-min.en-US.js"},"squarespace-products-collection-item-v2":{"css":"//static.squarespace.com/universal/styles-compressed/products-collection-item-v2-72b0ab7796582588032aa6472e2e2f14-min.css","js":"//static.squarespace.com/universal/scripts-compressed/products-collection-item-v2-117f3ba293cc438755ea-min.en-US.js"},"squarespace-products-collection-list-v2":{"css":"//static.squarespace.com/universal/styles-compressed/products-collection-list-v2-72b0ab7796582588032aa6472e2e2f14-min.css","js":"//static.squarespace.com/universal/scripts-compressed/products-collection-list-v2-4d5078333031511477b4-min.en-US.js"},"squarespace-search-page":{"css":"//static.squarespace.com/universal/styles-compressed/search-page-ea3e98edb84abbc5e758884f69149027-min.css","js":"//static.squarespace.com/universal/scripts-compressed/search-page-0aa57d16cf78878f3f16-min.en-US.js"},"squarespace-search-preview":{"js":"//static.squarespace.com/universal/scripts-compressed/search-preview-40fbe9ec5e45df6924de-min.en-US.js"},"squarespace-share-buttons":{"js":"//static.squarespace.com/universal/scripts-compressed/share-buttons-af6f0cc3700c88103691-min.en-US.js"},"squarespace-simple-liking":{"css":"//static.squarespace.com/universal/styles-compressed/simple-liking-310d0b18e112f708f91339b11fd55714-min.css","js":"//static.squarespace.com/universal/scripts-compressed/simple-liking-381bd341e182a6453b67-min.en-US.js"},"squarespace-social-buttons":{"css":"//static.squarespace.com/universal/styles-compressed/social-buttons-26106f808f7e9c739a7f862a408ed039-min.css","js":"//static.squarespace.com/universal/scripts-compressed/social-buttons-690e91f418c8dec6f7c5-min.en-US.js"},"squarespace-tourdates":{"css":"//static.squarespace.com/universal/styles-compressed/tourdates-d41d8cd98f00b204e9800998ecf8427e-min.css","js":"//static.squarespace.com/universal/scripts-compressed/tourdates-28274191f9f3b596819c-min.en-US.js"},"squarespace-website-overlays-manager":{"css":"//static.squarespace.com/universal/styles-compressed/website-overlays-manager-df9cddfe3eca22764d10fd6fc4f4ad73-min.css","js":"//static.squarespace.com/universal/scripts-compressed/website-overlays-manager-8f476a99e61895d0a22f-min.en-US.js"}},"pageType":50,"website":{"id":"53c46f82e4b097c07c1c8080","identifier":"eric-wilkinson-do07","websiteType":1,"contentModifiedOn":1532893443866,"cloneable":false,"siteStatus":{},"language":"en-US","timeZone":"America/New_York","machineTimeZoneOffset":-14400000,"timeZoneOffset":-14400000,"timeZoneAbbr":"EDT","siteTitle":"Eric Wilkinson","fullSiteTitle":"Deep Learning: Sparse Autoencoders \u2014 Eric Wilkinson","siteTagLine":"Robotics and More","siteDescription":"","location":{"mapZoom":12.0,"mapLat":40.7207559,"mapLng":-74.0007613,"addressTitle":"","addressLine1":"","addressLine2":"","addressCountry":""},"logoImageId":"53c6caa9e4b0b83abfc83fae","shareButtonOptions":{"1":true,"4":true,"3":true,"2":true,"7":true,"5":true,"8":true,"6":true},"logoImageUrl":"//static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/53c6caa9e4b0b83abfc83fae/1532893443866/","authenticUrl":"http://www.ericlwilkinson.com","internalUrl":"http://eric-wilkinson-do07.squarespace.com","baseUrl":"http://www.ericlwilkinson.com","primaryDomain":"www.ericlwilkinson.com","sslSetting":1,"isHstsEnabled":false,"socialAccounts":[{"serviceId":14,"userId":"js2w-1m2a2","userName":"819","screenname":"Eric Wilkinson","addedOn":1405537349640,"profileUrl":"http://www.linkedin.com/pub/eric-wilkinson/33/626/819","iconUrl":"http://m.c.lnkd.licdn.com/mpr/mprx/0_459zxGsiSByfVZviVGzoxTymSrZCsYXisFGExTR-t1ut5V1_N_6JA37p_Z4gJMLfJQqIK6dMdoJW","iconEnabled":true,"serviceName":"linkedin"}],"typekitId":"","statsMigrated":false,"imageMetadataProcessingEnabled":false,"screenshotId":"6dbe108052344dc298359877b6e0da6a6ea6f95d56f759c39f1693392d37f631","showOwnerLogin":false},"websiteSettings":{"id":"53c46f82e4b097c07c1c8081","websiteId":"53c46f82e4b097c07c1c8080","subjects":[{"systemSubject":"tech"}],"country":"US","state":"MA","simpleLikingEnabled":true,"mobileInfoBarSettings":{"style":1,"isContactEmailEnabled":true,"isContactPhoneNumberEnabled":true,"isLocationEnabled":true,"isBusinessHoursEnabled":true},"announcementBarSettings":{"style":1,"text":""},"commentLikesAllowed":true,"commentAnonAllowed":true,"commentThreaded":true,"commentApprovalRequired":false,"commentAvatarsOn":true,"commentSortType":2,"commentFlagThreshold":0,"commentFlagsAllowed":true,"commentEnableByDefault":true,"disqusShortname":"","commentsEnabled":true,"contactEmail":"ewilkinson@cs.umass.edu","storeSettings":{"returnPolicy":null,"termsOfService":null,"privacyPolicy":null,"paymentSettings":{},"expressCheckout":false,"continueShoppingLinkUrl":"/","useLightCart":false,"showNoteField":false,"shippingCountryDefaultValue":"US","billToShippingDefaultValue":false,"showShippingPhoneNumber":true,"isShippingPhoneRequired":false,"showBillingPhoneNumber":true,"isBillingPhoneRequired":false,"currenciesSupported":["CHF","HKD","MXN","EUR","DKK","USD","CAD","MYR","NOK","THB","AUD","SGD","ILS","PLN","GBP","CZK","SEK","NZD","PHP","RUB"],"defaultCurrency":"USD","selectedCurrency":"USD","measurementStandard":1,"orderConfirmationInjectCode":"","showCustomCheckoutForm":false,"enableMailingListOptInByDefault":true,"sameAsRetailLocation":false,"merchandisingSettings":{"scarcityEnabledOnProductItems":false,"scarcityEnabledOnProductBlocks":false,"scarcityMessageType":"DEFAULT_SCARCITY_MESSAGE","scarcityThreshold":10,"multipleQuantityAllowedForServices":true},"isLive":false,"multipleQuantityAllowedForServices":true},"useEscapeKeyToLogin":true,"ssBadgeType":1,"ssBadgePosition":4,"ssBadgeVisibility":1,"ssBadgeDevices":1,"ampEnabled":false},"cookieSettings":{"isCookieBannerEnabled":false,"isRestrictiveCookiePolicyEnabled":false,"isRestrictiveCookiePolicyAbsolute":false,"cookieBannerText":"","cookieBannerTheme":"","cookieBannerVariant":"","cookieBannerPosition":"","cookieBannerCtaVariant":"","cookieBannerCtaText":""},"websiteCloneable":false,"collection":{"title":"Blog","id":"53c4755fe4b00a113d5ba379","fullUrl":"/blog","publicCommentCount":0,"type":1},"item":{"title":"Deep Learning: Sparse Autoencoders","id":"546d5bf7e4b0d7784fd18052","fullUrl":"/blog/2014/11/19/deep-learning-sparse-autoencoders","publicCommentCount":2,"commentState":1,"recordType":1},"subscribed":false,"appDomain":"squarespace.com","templateTweakable":true,"tweakJSON":{"outerPadding":"100px","pagePadding":"60px","product-gallery-auto-crop":"true","product-image-auto-crop":"true","topPadding":"80px"},"templateId":"50749216e4b0933ed3da0a8d","pageFeatures":[1,2,4],"googleMapsStaticApiKey":"AIzaSyBQdch5IcgcQaKNG76sbMQv1MEBEKLeQ-8","impersonatedSession":false,"tzData":{"zones":[[-300,"US","E%sT",null]],"rules":{"US":[[1967,2006,null,"Oct","lastSun","2:00","0","S"],[1987,2006,null,"Apr","Sun>=1","2:00","1:00","D"],[2007,"max",null,"Mar","Sun>=8","2:00","1:00","D"],[2007,"max",null,"Nov","Sun>=1","2:00","0","S"]]}}};</script><script type="text/javascript"> SquarespaceFonts.loadViaContext(); Squarespace.load(window);</script><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="http://www.ericlwilkinson.com/blog?format=RSS" />
+<script type="application/ld+json">{"url":"http://www.ericlwilkinson.com","name":"Eric Wilkinson","description":"","image":"//static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/53c6caa9e4b0b83abfc83fae/1532893443866/","@context":"http://schema.org","@type":"WebSite"}</script><!--[if gte IE 9]> <link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&part=1"/><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&part=2"/><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&part=3"/><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&part=4"/><![endif]-->
+<!--[if lt IE 9]><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&noMedia=true&part=1"/><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&noMedia=true&part=2"/><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&noMedia=true&part=3"/><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false&noMedia=true&part=4"/><![endif]-->
+<!--[if !IE]> --><link rel="stylesheet" type="text/css" href="//static1.squarespace.com/static/sitecss/53c46f82e4b097c07c1c8080/8/50749216e4b0933ed3da0a8d/53c46f82e4b097c07c1c8084/677-05142015/1435692915774/site.css?&filterFeatures=false"/><!-- <![endif]-->
+<script>Static.COOKIE_BANNER_CAPABLE = true;</script>
+<!-- End of Squarespace Headers -->
+  <script src="https://static1.squarespace.com/static/ta/5074801ae4b0933ed3d9d554/677/scripts/core-0.2.0.min.js" type="text/javascript"></script>
+  <script type="text/javascript" src="https://static1.squarespace.com/static/ta/5074801ae4b0933ed3d9d554/677/scripts/combo/?dynamic-data.js&site.js"></script>
+  
+<script type="text/javascript"></script><link rel="stylesheet" type="text/css" href="/B1D671CF-E532-4481-99AA-19F420D90332/netdefender/hui/ndhui.css" /></head>
+
+<body class="show-products-category-navigation  page-borders-thick canvas-style-normal  header-subtitle-tag-line banner-alignment-center blog-layout-center project-layout-left-sidebar thumbnails-on-open-page-show-all social-icon-style-round  hide-info-footer  hide-page-title   hide-article-author product-list-titles-under product-list-alignment-center product-item-size-43-four-thirds product-image-auto-crop product-gallery-size-11-square product-gallery-auto-crop show-product-price show-product-item-nav product-social-sharing   event-thumbnails event-thumbnail-size-32-standard event-date-label event-date-label-time event-list-show-cats event-list-date event-list-time event-list-address   event-icalgcal-links  event-excerpts  event-item-back-link      opentable-style-light newsletter-style-dark small-button-style-solid small-button-shape-square medium-button-style-solid medium-button-shape-square large-button-style-solid large-button-shape-square button-style-solid button-corner-style-square tweak-product-quick-view-button-style-floating tweak-product-quick-view-button-position-bottom tweak-product-quick-view-lightbox-excerpt-display-truncate tweak-product-quick-view-lightbox-show-arrows tweak-product-quick-view-lightbox-show-close-button tweak-product-quick-view-lightbox-controls-weight-light native-currency-code-usd view-item collection-type-blog collection-layout-default collection-53c4755fe4b00a113d5ba379 mobile-style-available logo-image" id="item-546d5bf7e4b0d7784fd18052"><script type="text/javascript" language="javascript" src="/B1D671CF-E532-4481-99AA-19F420D90332/netdefender/hui/ndhui.js?0=0&amp;0=0&amp;0=0"></script>
+
+  <div id="canvas">
+
+    <div id="mobileNav" class="">
+      <div class="wrapper">
+        <nav class="main-nav mobileNav"><ul>
+  
+
+        
+
+          <li class="page-collection">
+
+            
+              <a href="/about">About</a>
+            
+
+            
+
+          </li>
+
+        
+
+      
+
+  
+
+        
+
+          <li class="blog-collection active-link">
+
+            
+              <a href="/blog">Blog</a>
+            
+
+            
+
+          </li>
+
+        
+
+      
+
+  
+</ul>
+</nav>
+      </div>
+    </div>
+    <div id="mobileMenuLink"><a>Menu</a></div>
+
+    <header id="header" data-content-field="site-title" class="clear">
+
+    
+
+      <div id="upper-logo">
+        <h1 class="logo"><a href="/"><img src="//static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/53c6caa9e4b0b83abfc83fae/1532893443866/?format=1500w" alt="Eric Wilkinson" /></a></h1>
+      </div>
+      <script>
+        Y.use('squarespace-ui-base', function(Y) {
+          Y.one("#upper-logo .logo").plug(Y.Squarespace.TextShrink, {
+            parentEl: Y.one('#upper-logo')
+          });
+        });
+      </script>
+
+      
+      <div class="site-info">
+        <div class="site-address">Street Address</div>
+        <div class="site-city-state">City, State, Zip</div>
+        <div class="site-phone">Phone Number</div>
+      </div>
+      
+
+      <div class="site-tag-line">
+        <span>Robotics and More</span>
+      </div>
+
+      <div class="custom-info">
+        <div class="sqs-layout sqs-grid-12 columns-12" data-layout-label="Header Subtitle: Custom Content" data-type="block-field" data-updated-on="1381760877175" id="customInfoBlock"><div class="row sqs-row"><div class="col sqs-col-12 span-12"><div class="sqs-block html-block sqs-block-html" data-block-type="2" id="block-2ff977b0afb1744e27a0"><div class="sqs-block-content"><p class="text-align-center">Your Custom Text Here</p></div></div></div></div></div>
+      </div>
+
+      <div id="lower-logo">
+        <h1 class="logo"><a href="/"><img src="//static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/53c6caa9e4b0b83abfc83fae/1532893443866/?format=1500w" alt="Eric Wilkinson" /></a></h1>
+      </div>
+      <script>
+        Y.use('squarespace-ui-base', function(Y) {
+          Y.one("#lower-logo .logo").plug(Y.Squarespace.TextShrink, {
+            parentEl: Y.one('#lower-logo')
+          });
+        });
+      </script>
+
+    
+      <div id="topNav">
+  <nav class="main-nav" data-content-field="navigation">
+    <ul>
+    
+
+        <li class="page-collection">
+
+          
+
+            
+              <a href="/about">About</a>
+            
+
+            
+
+
+          
+
+        </li>
+
+    
+
+        <li class="blog-collection active-link">
+
+          
+
+            
+              <a href="/blog">Blog</a>
+            
+
+            
+
+
+          
+
+        </li>
+
+    
+  </ul>
+  <div class="page-divider"></div>
+  </nav>
+</div>
+
+
+    </header>
+
+    <div class="page-divider top-divider"></div>
+
+    <!-- // page image or divider -->
+    
+      
+    
+
+    <section id="page" role="main" data-content-field="main-content">
+
+      <!-- // CATEGORY NAV -->
+      
+
+      <div class="article-wrapper">
+
+
+
+  <article class="hentry category-robotics category-sensors tag-deep-learning tag-autoencoders tag-hessian-free author-eric-wilkinson post-type-text featured" id="article-546d5bf7e4b0d7784fd18052" data-item-id="546d5bf7e4b0d7784fd18052">
+
+    <!--POST HEADER-->
+
+    <header>
+  		<h1 class="entry-title" itemprop="headline" data-content-field="title">
+        
+          <a href="/blog/2014/11/19/deep-learning-sparse-autoencoders">Deep Learning: Sparse Autoencoders</a>
+        
+      </h1>
+      <div class="meta">
+        <span class="date"><time class="published dt-published" datetime="2014-11-26" itemprop="datePublished" pubdate>November 26, 2014</time></span>
+        <span class="author"><a href="/blog?author=53c46f80e4b00dd69407d3c1" rel="author">Eric Wilkinson</a></span>
+      </div>
+    </header>
+
+    <!--SPECIAL CONTENT-->
+
+    
+
+    <!--POST BODY-->
+
+    <div class="body entry-content"><div class="sqs-layout sqs-grid-12 columns-12" data-layout-label="Post Body" data-type="item" data-updated-on="1416453178945" id="item-546d5bf7e4b0d7784fd18052"><div class="row sqs-row"><div class="col sqs-col-12 span-12"><div class="sqs-block code-block sqs-block-code" data-block-type="23" id="block-yui_3_17_2_1_1416437941365_50242"><div class="sqs-block-content"><script type="text/javascript"
+  src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<style>
+  .meta-inside {
+      background-color: rgba(112,111,112,0.8);
+    }
+</style></div></div><div class="sqs-block html-block sqs-block-html" data-block-type="2" id="block-adfa6629450b52a7b587"><div class="sqs-block-content"><h1>Introduction</h1><p>Deep learning describes a category of algorithms that use a pipeline of neural networks to learn a hierarchy of features, typically for classification tasks. Over the past 5 to 10 years, deep learning based algorithms have been shown to be a very effective way to process sensory information and have been used in a number record breaking algorithms against competitive datasets such as TMINST (for sound) and ImageNet (for vision). Models of this kind have free parameters in the millions, and the challenge of deep learning methods is the challenge of understanding complex and evolving computational systems. A number of advancements in training along with the computational advantages of the GPU have made deep learning tractable where 10 years ago these kinds of networks were too big to run and too difficult to train efficiently. &nbsp;My goal in these deep learning articles is to briefly overview recent advancements in deep learning that have lead to a resurgence of interest in these kinds of information processing systems one at a time. You should be able to find other posts on this topic <a href="/blog?tag=Deep%20Learning">here</a>. I will assume a basic familiarity with neural networks is known.&nbsp;</p></div></div><div class="sqs-block horizontalrule-block sqs-block-horizontalrule" data-block-type="47" id="block-yui_3_17_2_1_1416437941365_91762"><div class="sqs-block-content"><hr /></div></div><div class="sqs-block html-block sqs-block-html" data-block-type="2" id="block-yui_3_17_2_1_1416437941365_92024"><div class="sqs-block-content"><h1>Sparse Autoencoders</h1><p>Typically in a supervised learning task, a neural network with many layers (deep) is initialized with random weights from a Gaussian distribution. Performing back-propagation directly on a freshly initialized network will tend to be very slow and get stuck in poor local minima as the loss function is highly pathological when parameterized by millions of free variables with complex dependencies. This leads to deep neural networks that take a long time to train and yeild poor results. In his highly influential work on deep networks, Hilton showed that if you pretrain each layer of the network in an unsupervised manner to learn a sparsified representation before the classification task the learning problem was greatly reduced (Hilton et al., 2006).</p><p>An autoencoder takes as input a feature vector \(\mathbf{x}\) and learns a code dictionary that changes the raw input from one representation (presumably an inefficient one) to another. Sparse autoencoders are a type of autoencoder with a sparsity enforcer that directs a single layer network to learn a code dictionary that minimizes reconstruction error while restricting the number of code-words required for reconstruction. In fact, we can think of the task of classification as a kind of sparsifying algorithm that reduces the input to a single class value that minimizes prediction error.</p><p>The simplest sparse autoencoder consists of a single hidden layer, h, that is connected to the input vector \(\mathbf{x}\) by a weight matrix \(W\) forming the encoding step. The hidden layer then outputs to a reconstruction vector \(\mathbf{\widetilde{x}}\), using a tied weight matrix \(W^T\)to form the decoder (although the matrix could be untied separating the encoder from the decoder). The activation function is&nbsp;\(f\) &nbsp;and \(\mathbf{b}\) is the typical bias term.</p><p>\[<br />\begin{eqnarray}&nbsp;<br />\mathbf{z} &amp;=&amp; f(W\mathbf{x} + \mathbf{b}) &nbsp; &nbsp; \nonumber \\<br />&nbsp;\mathbf{\widetilde{x}} &amp;=&amp; &nbsp;f(W^T\mathbf{z} + \mathbf{b'}) \nonumber&nbsp;<br />\end{eqnarray}&nbsp;<br />\]</p><p>Learning occurs via backpropogation on the reconstruction error.</p><p>\[<br />\min \vert \vert \mathbf{x} - \mathbf{\widetilde{x}} \vert \vert ^2_2<br />\]</p></div></div><div class="sqs-block image-block sqs-block-image" data-aspect-ratio="88.7218045112782" data-block-type="5" id="block-yui_3_17_2_1_1417020861007_23223"><div class="sqs-block-content"> 
+
+  
+    <div class="image-block-outer-wrapper layout-caption-below    design-layout-inline">
+    
+      <div class="intrinsic" style="max-width:399.0px;">
+        
+          <div style="padding-bottom:88.7218017578125%;" class="image-block-wrapper lightbox  has-aspect-ratio" data-description="&lt;p&gt;A diagram of a sparse autoencoder network. The input vector &lt;span style=&quot;font-size:11.8181819915771px&quot;&gt;\(\mathbf{x}\)&amp;nbsp;&lt;/span&gt; is converted to a sparse representation on the hidden layer as \(\mathbf{z}\) and then reconstructed as&amp;nbsp;&lt;span style=&quot;font-size:11.8181819915771px&quot;&gt;\(\mathbf{\widetilde{x}}\).&lt;/span&gt;&lt;/p&gt;"  data-lightbox-theme="" >
+            <noscript><img src="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/54761e5de4b0a2fe88eacbf2/1417027168696/Autoencoder_2.png" alt="A diagram of a sparse autoencoder network. The input vector  \(\mathbf{x}\)&amp;nbsp;  is converted to a sparse representation on the hidden layer as \(\mathbf{z}\) and then reconstructed as&amp;nbsp; \(\mathbf{\widetilde{x}}\)." /></noscript><img class="thumb-image" data-src="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/54761e5de4b0a2fe88eacbf2/1417027168696/Autoencoder_2.png" data-image="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/54761e5de4b0a2fe88eacbf2/1417027168696/Autoencoder_2.png" data-image-dimensions="399x354" data-image-focal-point="0.5,0.5" alt="A diagram of a sparse autoencoder network. The input vector  \(\mathbf{x}\)&amp;nbsp;  is converted to a sparse representation on the hidden layer as \(\mathbf{z}\) and then reconstructed as&amp;nbsp; \(\mathbf{\widetilde{x}}\)." data-load="false" data-image-id="54761e5de4b0a2fe88eacbf2" data-type="image" />
+          </div>
+        
+
+        
+        <div class="image-caption-wrapper">
+          <div class="image-caption"><p>A diagram of a sparse autoencoder network. The input vector <span style="font-size:11.8181819915771px">\(\mathbf{x}\)&nbsp;</span> is converted to a sparse representation on the hidden layer as \(\mathbf{z}\) and then reconstructed as&nbsp;<span style="font-size:11.8181819915771px">\(\mathbf{\widetilde{x}}\).</span></p></div>
+        </div>
+        
+
+      </div>
+    
+    </div>
+  
+
+
+</div></div><div class="sqs-block html-block sqs-block-html" data-block-type="2" id="block-yui_3_17_2_1_1417020861007_35559"><div class="sqs-block-content"><p>Now that we have the network setup, the next step is to add a sparsifying component that drives the vector \(\mathbf{z}\) towards a sparse representation. There are many ways in the literature to accomplish this, but the one I find the simplest to implement as well as understand comes from k-Sparse Autoencoders (Makhzani et al., 2013). k-Sparse Autoencoders finds the \(k\) highest activations in \(\mathbf{z}\) and zeros out the rest. The error is then backpropogated only through the \(k\) active nodes in \(h\). For low levels of \( k \) (very sparse), \(k\) is scaled down incrementally over the course of training. A percise mathematical formulation can be found in their paper.&nbsp;</p><p>One of the nice things about this k-Sparse Autoencoders are they allow for a clear exploration on the effects of sparsity on a dataset in terms of percentage activation of the network. For example, the MINST dataset consists of 10,000 images of handwritten digits stored as 28x28 such as the 4 digit shown below.</p></div></div><div class="sqs-block image-block sqs-block-image" data-aspect-ratio="106.79933665008292" data-block-type="5" id="block-yui_3_17_2_1_1417020861007_57181"><div class="sqs-block-content"> 
+
+  
+    <div class="image-block-outer-wrapper layout-caption-below    design-layout-inline">
+    
+      <div class="intrinsic" style="max-width:141.0px;">
+        
+          <div style="padding-bottom:106.7993392944336%;" class="image-block-wrapper   has-aspect-ratio" data-description="" >
+            <noscript><img src="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/5476090ae4b028af6371dacf/1417021706275/digit_minst.png" alt="digit_minst.png" /></noscript><img class="thumb-image" data-src="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/5476090ae4b028af6371dacf/1417021706275/digit_minst.png" data-image="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/5476090ae4b028af6371dacf/1417021706275/digit_minst.png" data-image-dimensions="141x168" data-image-focal-point="0.5,0.5" alt="digit_minst.png" data-load="false" data-image-id="5476090ae4b028af6371dacf" data-type="image" />
+          </div>
+        
+
+        
+
+      </div>
+    
+    </div>
+  
+
+
+</div></div><div class="sqs-block html-block sqs-block-html" data-block-type="2" id="block-yui_3_17_2_1_1417020861007_64837"><div class="sqs-block-content"><p>In their paper, Makhzani et al. explore different values of &nbsp;\(k\) on MINST. The results show that as the value of \(k\) decreases the network is forced to learn increasingly complete representations of each individual digit. For \(k=70\), the representation is over-complete and the autoencoder learns highly local features involving small stroke and blob detectors. For \(k=10\) the representation is so sparse that each node in the network can only represent features from a single digit and have become completely global. This makes sense intuitively because in order to reconstruct each handwritten digit from only 10 basis functions, each basis must closely resemble the full image.&nbsp;</p></div></div><div class="sqs-block image-block sqs-block-image" data-block-type="5" id="block-yui_3_17_2_1_1417020861007_65449"><div class="sqs-block-content"> 
+
+  
+    <div class="image-block-outer-wrapper layout-caption-below    design-layout-inline">
+    
+      <div class="intrinsic" style="max-width:1128.0px;">
+        
+          <div style="padding-bottom:71.9858169555664%;" class="image-block-wrapper   " data-description="&lt;p&gt;This figure shows the effect of sparsity on the MINST dataset of handwritten digits. The k-Sparse Autoencoder trained on each example had&amp;nbsp;1000 hidden units. For high k-values the features learned are highly local while low k-values learned features that were global and specific. The best classification performance was achieved using \(k=40\). Figure taken from (&lt;span style=&quot;font-size:11.8181819915771px&quot;&gt;Makhzani et al.,2013).&lt;/span&gt;&lt;/p&gt;" >
+            <noscript><img src="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/547609e8e4b05a135b093411/1417021930652/k_sparse_minst.PNG" alt="This figure shows the effect of sparsity on the MINST dataset of handwritten digits. The k-Sparse Autoencoder trained on each example had&amp;nbsp;1000 hidden units. For high k-values the features learned are highly local while low k-values learned features that were global and specific. The best classification performance was achieved using \(k=40\). Figure taken from ( Makhzani et al.,2013)." /></noscript><img class="thumb-image" data-src="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/547609e8e4b05a135b093411/1417021930652/k_sparse_minst.PNG" data-image="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/t/547609e8e4b05a135b093411/1417021930652/k_sparse_minst.PNG" data-image-dimensions="1128x812" data-image-focal-point="0.5,0.5" alt="This figure shows the effect of sparsity on the MINST dataset of handwritten digits. The k-Sparse Autoencoder trained on each example had&amp;nbsp;1000 hidden units. For high k-values the features learned are highly local while low k-values learned features that were global and specific. The best classification performance was achieved using \(k=40\). Figure taken from ( Makhzani et al.,2013)." data-load="false" data-image-id="547609e8e4b05a135b093411" data-type="image" />
+          </div>
+        
+
+        
+        <div class="image-caption-wrapper">
+          <div class="image-caption"><p>This figure shows the effect of sparsity on the MINST dataset of handwritten digits. The k-Sparse Autoencoder trained on each example had&nbsp;1000 hidden units. For high k-values the features learned are highly local while low k-values learned features that were global and specific. The best classification performance was achieved using \(k=40\). Figure taken from (<span style="font-size:11.8181819915771px">Makhzani et al.,2013).</span></p></div>
+        </div>
+        
+
+      </div>
+    
+    </div>
+  
+
+
+</div></div><div class="sqs-block html-block sqs-block-html" data-block-type="2" id="block-yui_3_17_2_1_1417020861007_124339"><div class="sqs-block-content"><p>There are many other flavors of autoencoders. &nbsp;Denoising autoencoders were introduced by Bengio's group and operate by attempting to accurately reconstruct the input after a percentage of the data has been randomly removed (Vincent et al., 2008)&nbsp;. This forces the network to learn robust features that tend to generalize better. This idea later served as the basis for dropout. Stacking autoencoders so that each layer of the network learns an encoding of the layer below creates a network that can learn hierarchical features in an unsupervised manner (Vincent et al., 2010). It turns out that training stacked layers in this manner allows a deep network to learn a good representation incrementally instead of trying to train the whole network in ensemble from a random initialization of weights. A wonderful investigation into why pretraining with autoencoders yields better results can be found <a target="_blank" href="http://jmlr.org/papers/volume11/erhan10a/erhan10a.pdf">here</a>.</p></div></div><div class="sqs-block horizontalrule-block sqs-block-horizontalrule" data-block-type="47" id="block-yui_3_17_2_1_1416950914456_52120"><div class="sqs-block-content"><hr /></div></div><div class="sqs-block html-block sqs-block-html" data-block-type="2" id="block-yui_3_17_2_1_1416950914456_52437"><div class="sqs-block-content"><h2>References</h2><p>Hilton Geoffrey E., Stinchcombe Maxwell, and Teh Yee W. (2006) <a target="_blank" href="https://www.cs.toronto.edu/~hinton/absps/fastnc.pdf">A fast learning algorithm for deep belief nets.</a> Neural Comput., 18(7):1527-1554, July 2006<br /><br />Makhzani Alireza, Frey Brendan (2013) <a target="_blank" href="http://arxiv.org/pdf/1312.5663.pdf">preprint arXiv:1312.5663</a> &nbsp;[cs.LG]</p><p>Vincent P., Larochelle H.,&nbsp;Bengio Y.&nbsp;and Manzagol P.A. (2008),&nbsp;<a target="_blank" href="http://www.cs.toronto.edu/~larocheh/publications/icml-2008-denoising-autoencoders.pdf">Extracting and Composing Robust Features with Denoising Autoencoders</a>, Proceedings of the Twenty-fifth International Conference on Machine Learning (ICML‘08), pages 1096 - 1103, ACM.</p><p>Vincent P., Larochelle H., Lajoie I., Bengio Y., and Manzagol P.A. (2010), <a target="_blank" href="http://info.usherbrooke.ca/hlarochelle/publications/vincent10a.pdf">Stacked denoising autoencoders: learning useful representations in a deep network with local denoising criterion</a>, J Mach. Learn. Res., vol. 11, no. 11, pp.3371-3408.</p><p>D. Erhan, A. Courville, Y. Bengio, and P. Vincent, “<a target="_blank" href="http://jmlr.org/papers/volume11/erhan10a/erhan10a.pdf">Why does unsupervised pre-training help deep learning?</a>” in Proceedings of AISTATS 2010, vol. 9, May 2010, pp. 201–208.</p></div></div></div></div></div></div>
+    
+
+
+    <!--POST FOOTER-->
+
+    <footer>
+      <div class="meta">
+
+        
+
+        <div class="first meta-row">
+          <span class="categories"><span class="categories-title">In</span> <a href="/blog?category=Robotics" rel="tag">Robotics</a>, <a href="/blog?category=Sensors" rel="tag">Sensors</a></span>
+          <span class="tags"><span class="tags-title">Tags</span> <a href="/blog?tag=Deep+Learning" rel="tag">Deep Learning</a>, <a href="/blog?tag=AutoEncoders" rel="tag">AutoEncoders</a>, <a href="/blog?tag=Hessian+Free" rel="tag">Hessian Free</a></span>
+        </div>
+
+        <div class="second meta-row">
+          <span class="squarespace-social-buttons inline-style" data-system-data-id="1417028700855-4H99NA5RWO766UYM671K" data-asset-url="https://static1.squarespace.com/static/53c46f82e4b097c07c1c8080/53c4755fe4b00a113d5ba379/546d5bf7e4b0d7784fd18052/1417831948925/" data-record-type="1" data-full-url="/blog/2014/11/19/deep-learning-sparse-autoencoders" data-title="Deep Learning: Sparse Autoencoders"></span>
+          
+  <span class="sqs-simple-like" data-item-id="546d5bf7e4b0d7784fd18052" data-like-count="9">
+    <span class="like-icon"></span>
+    <span class="like-count"></span>
+  </span>
+
+
+        </div>
+
+      </div>
+    </footer>
+
+
+  </article>
+
+
+
+<!--PAGINATION-->
+
+
+  <nav class="pagination clear">
+      <a class="prev-item" href="/blog/2014/11/27/egocentric-harmonic-function-planner">&larr; A Lightweight, Embeddable Navigation Planner</a><a class="next-item" href="/blog/2014/8/18/self-organizing-inverse-kinematics">Self-Organizing Kinematics &rarr;</a>
+  </nav>
+
+
+
+  <!-- COMMENTS -->
+
+  <section id="comments-546d5bf7e4b0d7784fd18052" class="comments-wrapper">
+    
+  <div class="squarespace-comments" id="comments-546d5bf7e4b0d7784fd18052" data-item-id="546d5bf7e4b0d7784fd18052" data-public-comment-count="2" data-comment-state="1"></div>
+
+
+  </section>
+
+
+</div><!-- /article-wrapper -->
+
+<aside id="sidebar"><div class="sqs-layout sqs-grid-1 columns-1 empty" data-layout-label="Blog Sidebar Content" data-type="block-field" data-updated-on="1405551929310" id="sidebarBlocks"><div class="row sqs-row"><div class="col sqs-col-1 span-1"></div></div></div></aside>
+
+    </section>
+
+    <div class="sqs-layout sqs-grid-12 columns-12 empty" data-layout-label="Footer Content: Blog" data-type="block-field" id="item-546d5bf7e4b0d7784fd18052"><div class="row sqs-row"><div class="col sqs-col-12 span-12"></div></div></div>
+
+    <!-- <div class="page-divider bottom-divider"></div> -->
+
+    <div class="info-footer-wrapper clear">
+      <div class="info-footer">
+      <div class="sqs-layout sqs-grid-12 columns-12" data-layout-label="Info Footer Content" data-type="block-field" data-updated-on="1357764188561" id="infoFooterBlock"><div class="row sqs-row"><div class="col sqs-col-12 span-12"><div class="sqs-block summary-block sqs-block-summary" data-block-type="20" id="block-81c3ab8b7e681e7c61ca"><div class="sqs-block-content"><div class="sqs-state-message error">You must select a collection to display.</div></div></div></div></div></div>
+      
+        
+        <div id="socialLinks" class="social-links" data-content-field="connected-accounts">
+          <a href="http://www.linkedin.com/pub/eric-wilkinson/33/626/819" target="_blank" class="social-linkedin"></a>
+        </div>
+        
+      
+      </div>
+    </div>
+
+    <footer id="footer">
+      <div class="sqs-layout sqs-grid-12 columns-12 empty" data-layout-label="Footer Content" data-type="block-field" data-updated-on="1405626939591" id="footerBlock"><div class="row sqs-row"><div class="col sqs-col-12 span-12"></div></div></div>
+    </footer>
+
+  </div>
+
+  <div></div>
+
+  <script type="text/javascript" data-sqs-type="imageloader-bootstrapper">(function() {if(window.ImageLoader) { window.ImageLoader.bootstrap({}, document); }})();</script><script>Squarespace.afterBodyLoad(Y);</script><svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display:none"><symbol id="linkedin-icon" viewBox="0 0 64 64"><path d="M20.4,44h5.4V26.6h-5.4V44z M23.1,18c-1.7,0-3.1,1.4-3.1,3.1c0,1.7,1.4,3.1,3.1,3.1 c1.7,0,3.1-1.4,3.1-3.1C26.2,19.4,24.8,18,23.1,18z M39.5,26.2c-2.6,0-4.4,1.4-5.1,2.8h-0.1v-2.4h-5.2V44h5.4v-8.6 c0-2.3,0.4-4.5,3.2-4.5c2.8,0,2.8,2.6,2.8,4.6V44H46v-9.5C46,29.8,45,26.2,39.5,26.2z"/></symbol><symbol id="linkedin-mask" viewBox="0 0 64 64"><path d="M0,0v64h64V0H0z M25.8,44h-5.4V26.6h5.4V44z M23.1,24.3c-1.7,0-3.1-1.4-3.1-3.1c0-1.7,1.4-3.1,3.1-3.1 c1.7,0,3.1,1.4,3.1,3.1C26.2,22.9,24.8,24.3,23.1,24.3z M46,44h-5.4v-8.4c0-2,0-4.6-2.8-4.6c-2.8,0-3.2,2.2-3.2,4.5V44h-5.4V26.6 h5.2V29h0.1c0.7-1.4,2.5-2.8,5.1-2.8c5.5,0,6.5,3.6,6.5,8.3V44z"/></symbol></svg>
+
+
+
+</body>
+
+</html>
